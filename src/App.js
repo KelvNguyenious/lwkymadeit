@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 
 /* ─── Hook: is mobile? ─── */
 function useIsMobile(bp = 768) {
-  const [m, setM] = useState(() => typeof window !== "undefined" ? window.innerWidth <= bp : false);
+  const [m, setM] = useState(() => {
+    if (typeof window === "undefined") return false;
+    /* screen.width gives true device width even without viewport meta tag */
+    return window.innerWidth <= bp || screen.width <= bp;
+  });
   useEffect(() => {
-    const c = () => setM(window.innerWidth <= bp);
+    const c = () => setM(window.innerWidth <= bp || screen.width <= bp);
     c();
     window.addEventListener("resize", c);
     return () => window.removeEventListener("resize", c);
@@ -563,8 +567,11 @@ export default function Portfolio() {
       meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
       document.head.appendChild(meta);
     }
-    /* Mark ready after first paint so useIsMobile has resolved */
-    requestAnimationFrame(() => setReady(true));
+  }, []);
+
+  /* Fire synchronously before browser paints to prevent desktop flash */
+  useLayoutEffect(() => {
+    setReady(true);
   }, []);
 
   useEffect(() => {
@@ -581,8 +588,13 @@ export default function Portfolio() {
     setLightboxItem(productItems[next]);
   };
 
+  /* Don't render anything until we know mobile vs desktop — prevents flash */
+  if (!ready) {
+    return <div style={{ background: "#fafaf8", minHeight: "100vh" }} />;
+  }
+
   return (
-    <div style={{ background: "#fafaf8", minHeight: "100vh", color: "#1a1a1a", overflowX: "hidden", opacity: ready ? 1 : 0, transition: "opacity 0.15s ease" }}>
+    <div style={{ background: "#fafaf8", minHeight: "100vh", color: "#1a1a1a", overflowX: "hidden" }}>
 
       {/* ─── NAV ─── */}
       <nav style={{
