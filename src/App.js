@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 
 /* ─── Hook: is mobile? ─── */
 function useIsMobile(bp = 768) {
-  const [m, setM] = useState(false);
+  const [m, setM] = useState(() => typeof window !== "undefined" ? window.innerWidth <= bp : false);
   useEffect(() => {
     const c = () => setM(window.innerWidth <= bp);
     c();
@@ -505,6 +505,13 @@ export default function Portfolio() {
     link.href = "https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap";
     link.rel = "stylesheet";
     document.head.appendChild(link);
+    /* Ensure viewport meta tag exists for proper mobile scaling */
+    if (!document.querySelector('meta[name="viewport"]')) {
+      const meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+      document.head.appendChild(meta);
+    }
   }, []);
 
   useEffect(() => {
@@ -656,8 +663,16 @@ export default function Portfolio() {
         @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes scrollLine { 0% { transform: translateY(-100%); } 50% { transform: translateY(0); } 100% { transform: translateY(100%); } }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+        body { overflow-x: hidden; }
         ::selection { background: #1a1a1a; color: #fafaf8; }
+
+        /* ─── Mobile CSS fallbacks ─── */
+        @media (max-width: 768px) {
+          nav { height: 56px !important; padding: 0 16px !important; justify-content: space-between !important; }
+          h1 { white-space: normal !important; font-size: clamp(36px, 10vw, 52px) !important; }
+          section[data-hero] { min-height: auto !important; padding: 80px 20px 40px !important; }
+        }
       `}</style>
     </div>
   );
