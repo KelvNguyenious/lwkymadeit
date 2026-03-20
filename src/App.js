@@ -530,7 +530,8 @@ function HeroImage() {
     <div style={{
       position: "absolute",
       right: isMobile ? -30 : 0,
-      bottom: isMobile ? 0 : 0,
+      top: isMobile ? "30%" : "auto",
+      bottom: isMobile ? "auto" : 0,
       zIndex: 1,
       width: isMobile ? "60vw" : "clamp(217px, 30.3vw, 434px)",
       height: "auto",
