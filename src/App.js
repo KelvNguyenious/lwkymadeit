@@ -292,20 +292,54 @@ function ProductGridItem({ item, index, onClick }) {
   );
 }
 
+/* ─── Lightbox for project detail images ─── */
+function ProjectImageLightbox({ images, currentIdx, onClose, onChange }) {
+  const [show, setShow] = useState(false);
+  const isMobile = useIsMobile();
+  useEffect(() => {
+    requestAnimationFrame(() => setShow(true));
+    const h = (e) => {
+      if (e.key === "Escape") cl();
+      if (e.key === "ArrowLeft" && currentIdx > 0) onChange(currentIdx - 1);
+      if (e.key === "ArrowRight" && currentIdx < images.length - 1) onChange(currentIdx + 1);
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [currentIdx]);
+  const cl = () => { setShow(false); setTimeout(onClose, 300); };
+  const hasPrev = currentIdx > 0;
+  const hasNext = currentIdx < images.length - 1;
+  return (
+    <div onClick={cl} style={{ position: "fixed", inset: 0, zIndex: 2000, background: show ? "rgba(250,250,248,0.96)" : "rgba(250,250,248,0)", backdropFilter: "blur(16px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "background 0.3s ease" }}>
+      <button onClick={cl} style={{ position: "absolute", top: isMobile ? 16 : 32, right: isMobile ? 16 : 32, background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, letterSpacing: "0.08em", textTransform: "uppercase", color: "#1a1a1a", padding: "8px 0", borderBottom: "1px solid #1a1a1a", zIndex: 2001 }}>Close</button>
+      {!isMobile && hasPrev && <button onClick={(e) => { e.stopPropagation(); onChange(currentIdx - 1); }} style={{ position: "absolute", left: 32, top: "50%", transform: "translateY(-50%)", background: "none", border: "1px solid #ccc", borderRadius: "50%", width: 48, height: 48, cursor: "pointer", fontSize: 20, color: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.3s" }} onMouseEnter={(e) => e.currentTarget.style.borderColor = "#1a1a1a"} onMouseLeave={(e) => e.currentTarget.style.borderColor = "#ccc"}>&#8592;</button>}
+      {!isMobile && hasNext && <button onClick={(e) => { e.stopPropagation(); onChange(currentIdx + 1); }} style={{ position: "absolute", right: 32, top: "50%", transform: "translateY(-50%)", background: "none", border: "1px solid #ccc", borderRadius: "50%", width: 48, height: 48, cursor: "pointer", fontSize: 20, color: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.3s" }} onMouseEnter={(e) => e.currentTarget.style.borderColor = "#1a1a1a"} onMouseLeave={(e) => e.currentTarget.style.borderColor = "#ccc"}>&#8594;</button>}
+      <img onClick={(e) => e.stopPropagation()} src={images[currentIdx]} alt="" style={{ maxWidth: isMobile ? "92vw" : "75vw", maxHeight: isMobile ? "80vh" : "80vh", objectFit: "contain", opacity: show ? 1 : 0, transform: show ? "scale(1)" : "scale(0.92)", transition: "opacity 0.35s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1)", cursor: "default" }} />
+      <span style={{ position: "absolute", bottom: isMobile ? 20 : 32, fontFamily: "'DM Mono', monospace", fontSize: 13, color: "#999", letterSpacing: "0.04em", opacity: show ? 1 : 0, transition: "opacity 0.3s ease" }}>{String(currentIdx + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span>
+    </div>
+  );
+}
+
 /* ─── Project detail overlay ─── */
 function ProjectDetail({ project, onClose, onNext, onPrev, hasNext, hasPrev }) {
   const [loaded, setLoaded] = useState(false);
   const scrollRef = useRef(null);
+  const infoPanelRef = useRef(null);
   const isMobile = useIsMobile();
+  const [lightboxIdx, setLightboxIdx] = useState(null);
   useEffect(() => { requestAnimationFrame(() => setLoaded(true)); document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [project.id]);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    if (infoPanelRef.current) infoPanelRef.current.scrollTop = 0;
+    setLightboxIdx(null);
+  }, [project.id]);
   const handleClose = () => { setLoaded(false); setTimeout(onClose, 500); };
   return (
     <div ref={scrollRef} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#fafaf8", overflowY: "auto", opacity: loaded ? 1 : 0, transition: "opacity 0.5s ease" }}>
       <button onClick={handleClose} style={{ position: "fixed", top: isMobile ? 16 : 32, right: isMobile ? 16 : 32, zIndex: 1001, background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 14, letterSpacing: "0.08em", textTransform: "uppercase", color: "#1a1a1a", padding: "8px 0", borderBottom: "1px solid #1a1a1a" }}>Close</button>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "80px 20px 60px" : "120px 40px 80px" }}>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 32 : 60, alignItems: "start" }}>
-          <div style={isMobile ? {} : { position: "sticky", top: 120, maxHeight: "calc(100vh - 160px)", overflowY: "auto", paddingBottom: 40, paddingRight: 16 }}>
+          <div ref={infoPanelRef} style={isMobile ? {} : { position: "sticky", top: 120, maxHeight: "calc(100vh - 160px)", overflowY: "auto", paddingBottom: 40, paddingRight: 16 }}>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999", marginBottom: 16 }}>{project.category}</p>
             <h1 style={{ fontFamily: "'PP Editorial New', 'Playfair Display', Georgia, serif", fontSize: isMobile ? 28 : "clamp(28px, 3.5vw, 48px)", fontWeight: 400, lineHeight: 1.15, color: "#1a1a1a", margin: "0 0 24px" }}>{project.title}</h1>
             <div style={{ borderTop: "1px solid #e0e0dc", paddingTop: 24 }}>
@@ -315,13 +349,16 @@ function ProjectDetail({ project, onClose, onNext, onPrev, hasNext, hasPrev }) {
             {!isMobile && <div style={{ marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 1, height: 48, background: "#ccc", position: "relative", overflow: "hidden" }}><div style={{ width: 1, height: 48, background: "#1a1a1a", animation: "scrollLine 2s ease-in-out infinite" }} /></div><span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#999" }}>Scroll</span></div>}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 8 : 12 }}>
-            {project.images.map((img, i) => (<div key={i} style={{ width: "100%", overflow: "hidden", borderRadius: 4, background: "#eee" }}><LazyImage src={img} alt={`${project.title} ${i+1}`} style={{ width: "100%", height: "auto", display: "block", objectFit: "contain" }} /></div>))}
+            {project.images.map((img, i) => (<div key={i} onClick={() => setLightboxIdx(i)} style={{ width: "100%", overflow: "hidden", borderRadius: 4, background: "#eee", cursor: "pointer" }}><LazyImage src={img} alt={`${project.title} ${i+1}`} style={{ width: "100%", height: "auto", display: "block", objectFit: "contain", transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1)" }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"} /></div>))}
           </div>
         </div>
       </div>
       {!isMobile && hasPrev && <button onClick={onPrev} style={{ position: "fixed", top: "50%", left: 32, zIndex: 1001, transform: "translateY(-50%)", background: "none", border: "1px solid #ccc", borderRadius: "50%", width: 48, height: 48, cursor: "pointer", fontSize: 20, color: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>&#8592;</button>}
       {!isMobile && hasNext && <button onClick={onNext} style={{ position: "fixed", top: "50%", right: 32, zIndex: 1001, transform: "translateY(-50%)", background: "none", border: "1px solid #ccc", borderRadius: "50%", width: 48, height: 48, cursor: "pointer", fontSize: 20, color: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>&#8594;</button>}
       {isMobile && <div style={{ display: "flex", justifyContent: "center", gap: 16, padding: "20px 20px 40px" }}>{hasPrev && <button onClick={onPrev} style={{ background: "none", border: "1px solid #ccc", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", fontSize: 18, color: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>&#8592;</button>}{hasNext && <button onClick={onNext} style={{ background: "none", border: "1px solid #ccc", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", fontSize: 18, color: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>&#8594;</button>}</div>}
+
+      {/* Image lightbox within project detail */}
+      {lightboxIdx !== null && <ProjectImageLightbox images={project.images} currentIdx={lightboxIdx} onClose={() => setLightboxIdx(null)} onChange={(idx) => setLightboxIdx(idx)} />}
     </div>
   );
 }
@@ -491,7 +528,7 @@ function HeroImage() {
       right: isMobile ? -30 : 0,
       bottom: isMobile ? 0 : 0,
       zIndex: 1,
-      width: isMobile ? "60vw" : "clamp(255px, 35.7vw, 510px)",
+      width: isMobile ? "60vw" : "clamp(217px, 30.3vw, 434px)",
       height: "auto",
       pointerEvents: "none",
       animation: isMobile ? "none" : "heroFloat 6s ease-in-out infinite",
@@ -511,6 +548,7 @@ export default function Portfolio() {
   const [lightboxItem, setLightboxItem] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [ready, setReady] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -525,6 +563,8 @@ export default function Portfolio() {
       meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
       document.head.appendChild(meta);
     }
+    /* Mark ready after first paint so useIsMobile has resolved */
+    requestAnimationFrame(() => setReady(true));
   }, []);
 
   useEffect(() => {
@@ -542,7 +582,7 @@ export default function Portfolio() {
   };
 
   return (
-    <div style={{ background: "#fafaf8", minHeight: "100vh", color: "#1a1a1a", overflowX: "hidden" }}>
+    <div style={{ background: "#fafaf8", minHeight: "100vh", color: "#1a1a1a", overflowX: "hidden", opacity: ready ? 1 : 0, transition: "opacity 0.15s ease" }}>
 
       {/* ─── NAV ─── */}
       <nav style={{
