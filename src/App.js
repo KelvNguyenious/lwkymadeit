@@ -485,8 +485,21 @@ function HeroLogo() {
 
 function HeroImage() {
   const isMobile = useIsMobile();
-  if (isMobile) return null;
-  return (<div style={{ position: "absolute", right: 0, bottom: 0, zIndex: 1, width: "clamp(255px, 35.7vw, 510px)", height: "auto", pointerEvents: "none", animation: "heroFloat 6s ease-in-out infinite" }}><img src="https://i.imgur.com/BWqOzEM.png" alt="" style={{ width: "100%", height: "auto", display: "block", objectFit: "contain" }} /></div>);
+  return (
+    <div style={{
+      position: "absolute",
+      right: isMobile ? -30 : 0,
+      bottom: isMobile ? 0 : 0,
+      zIndex: 1,
+      width: isMobile ? "60vw" : "clamp(255px, 35.7vw, 510px)",
+      height: "auto",
+      pointerEvents: "none",
+      animation: isMobile ? "none" : "heroFloat 6s ease-in-out infinite",
+      opacity: isMobile ? 0.55 : 1,
+    }}>
+      <img src="https://i.imgur.com/BWqOzEM.png" alt="" style={{ width: "100%", height: "auto", display: "block", objectFit: "contain" }} />
+    </div>
+  );
 }
 
 /* ═══════════════════════════════════════
@@ -576,7 +589,7 @@ export default function Portfolio() {
       {/* ═══ WORK TAB ═══ */}
       {activeSection === "Work" && (
         <>
-          <section style={{ minHeight: isMobile ? "auto" : "100vh", display: "flex", flexDirection: "column", justifyContent: isMobile ? "flex-start" : "center", padding: isMobile ? "80px 20px 40px" : "0 40px", position: "relative", overflow: "hidden" }}>
+          <section style={{ minHeight: isMobile ? "85vh" : "100vh", display: "flex", flexDirection: "column", justifyContent: isMobile ? "flex-start" : "center", padding: isMobile ? "80px 20px 40px" : "0 40px", position: "relative", overflow: "hidden" }}>
             <HeroImage />
             <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative", zIndex: 2, paddingTop: isMobile ? 20 : 0 }}>
               <div style={{ overflow: "hidden", marginBottom: 12 }}>
@@ -586,12 +599,6 @@ export default function Portfolio() {
               <HeroSubtext />
               <HeroLogo />
             </div>
-
-            {isMobile && (
-              <div style={{ width: "70%", margin: "32px auto 0", position: "relative", zIndex: 1 }}>
-                <img src="https://i.imgur.com/BWqOzEM.png" alt="" style={{ width: "100%", height: "auto", display: "block", objectFit: "contain" }} />
-              </div>
-            )}
 
             {!isMobile && (
               <div style={{ position: "absolute", bottom: 40, left: 40, display: "flex", alignItems: "center", gap: 12, opacity: 0, animation: "fadeUp 1s cubic-bezier(0.16,1,0.3,1) 0.8s forwards" }}>
